@@ -48,6 +48,15 @@
     box-shadow:0 1px 3px rgba(0,0,0,.4);transition:background .3s,box-shadow .3s}
   .hamb span:nth-child(1){top:15px}.hamb span:nth-child(2){top:21px}.hamb span:nth-child(3){top:27px}
   .hamb.dark span{background:#2a1a12;box-shadow:none}
+  .cart{position:fixed;top:16px;right:16px;z-index:55;width:42px;height:42px;display:flex;align-items:center;
+    justify-content:center;color:#fff;text-decoration:none}
+  .cart svg{width:24px;height:24px;filter:drop-shadow(0 1px 3px rgba(0,0,0,.4))}
+  .cart.dark{color:#2a1a12}
+  .cart.dark svg{filter:none}
+  .cart .cbadge{position:absolute;top:5px;right:3px;min-width:17px;height:17px;border-radius:9px;background:#bd7a6e;
+    color:#fff;font-size:10px;font-weight:700;display:none;align-items:center;justify-content:center;padding:0 4px;
+    font-family:-apple-system,sans-serif;box-shadow:0 1px 4px rgba(0,0,0,.3)}
+  .cart .cbadge.show{display:flex}
   .menu-wrap{position:fixed;inset:0;z-index:60;visibility:hidden;opacity:0;transition:opacity .3s,visibility .3s}
   .menu-wrap.open{visibility:visible;opacity:1}
   .menu-panel{position:absolute;inset:0;background:#f5f0e7;overflow-y:auto;-webkit-overflow-scrolling:touch;
@@ -88,6 +97,7 @@
 </head>
 <body>
 <button class="hamb" id="hambBtn" aria-label="Menu"><span></span><span></span><span></span></button>
+<a class="cart" id="cartBtn" href="https://soltalingerie.com/cart" aria-label="Cart"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M6 7h12l1 13H5z"/><path d="M9 7a3 3 0 0 1 6 0"/></svg><span class="cbadge" id="cartBadge">0</span></a>
 <div class="menu-wrap" id="menuWrap">
   <div class="menu-panel">
     <button class="menu-close" id="menuClose" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
@@ -220,11 +230,13 @@ const N=pages.length;
 let v=0;                                   // current vertical page
 
 const hambBtn=document.getElementById('hambBtn');
+const cartBtn=document.getElementById('cartBtn');
 const pageH=()=>app.clientHeight;
 const yFor=i=>-i*pageH();
 function renderDeck(anim){ deck.style.transition=anim?'':'none'; deck.style.transform=`translateY(${yFor(v)}px)`;
   const bg=getComputedStyle(pages[v]).backgroundColor; const m=bg&&bg.match(/\d+/g);
-  if(m) hambBtn.classList.toggle('dark',(+m[0]*.299 + +m[1]*.587 + +m[2]*.114)>150);
+  const light = m && (+m[0]*.299 + +m[1]*.587 + +m[2]*.114)>150;
+  hambBtn.classList.toggle('dark',!!light); cartBtn.classList.toggle('dark',!!light);
 }
 
 /* nested horizontal carousel (single instance) */
@@ -282,6 +294,19 @@ const menuWrap=document.getElementById('menuWrap');
 hambBtn.addEventListener('click',()=>menuWrap.classList.add('open'));
 document.getElementById('menuClose').addEventListener('click',()=>menuWrap.classList.remove('open'));
 document.querySelector('[data-home]').addEventListener('click',e=>{ e.preventDefault(); menuWrap.classList.remove('open'); v=0; renderDeck(true); });
+
+// real cart count: reads the Shopify cart via a same-origin /cart.js.
+// On the live Solta domain this returns the real item count; on the preview domain it just stays hidden.
+const cartBadge=document.getElementById('cartBadge');
+function refreshCart(){
+  fetch('/cart.js',{headers:{'Accept':'application/json'},credentials:'same-origin'})
+    .then(r=>r.ok?r.json():null)
+    .then(d=>{ const n=(d&&d.item_count)||0; cartBadge.textContent=n>99?'99+':n; cartBadge.classList.toggle('show',n>0); })
+    .catch(()=>{});
+}
+refreshCart();
+document.addEventListener('visibilitychange',()=>{ if(!document.hidden) refreshCart(); });
+window.addEventListener('pageshow',refreshCart);
 </script>
 </body>
 </html>
