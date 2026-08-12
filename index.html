@@ -42,6 +42,31 @@
   .dot{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.32);transition:.3s}
   .dot.on{background:#fff;width:22px;border-radius:4px}
 
+  /* hamburger + menu */
+  .hamb{position:fixed;top:16px;left:16px;z-index:55;width:42px;height:42px;border:none;background:none;cursor:pointer}
+  .hamb span{position:absolute;left:10px;width:22px;height:2px;border-radius:2px;background:#fff;
+    box-shadow:0 1px 3px rgba(0,0,0,.4);transition:background .3s,box-shadow .3s}
+  .hamb span:nth-child(1){top:15px}.hamb span:nth-child(2){top:21px}.hamb span:nth-child(3){top:27px}
+  .hamb.dark span{background:#2a1a12;box-shadow:none}
+  .menu-wrap{position:fixed;inset:0;z-index:60;visibility:hidden;opacity:0;transition:opacity .3s,visibility .3s}
+  .menu-wrap.open{visibility:visible;opacity:1}
+  .menu-panel{position:absolute;inset:0;background:#f5f0e7;overflow-y:auto;-webkit-overflow-scrolling:touch;
+    display:flex;flex-direction:column;padding:74px 30px calc(40px + env(safe-area-inset-bottom));
+    transform:translateY(-14px);transition:transform .34s cubic-bezier(.2,.8,.2,1)}
+  .menu-wrap.open .menu-panel{transform:none}
+  .menu-close{position:fixed;top:18px;right:20px;z-index:61;width:40px;height:40px;border:none;background:none;
+    color:#2a1a12;cursor:pointer;display:flex;align-items:center;justify-content:center}
+  .menu-close svg{width:24px;height:24px}
+  .menu-nav{width:100%;max-width:400px;margin:0 auto}
+  .menu-nav a{display:block;text-decoration:none;color:#2a1a12}
+  .menu-nav .m-item{font-family:Georgia,'Times New Roman',serif;font-size:25px;padding:11px 0;letter-spacing:.01em}
+  .menu-nav .m-label{font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:#bd7a6e;font-weight:600;
+    margin-top:16px;padding:14px 0 6px;border-top:1px solid rgba(60,40,28,.13)}
+  .menu-nav .m-group a{font-family:Georgia,serif;font-size:18px;padding:8px 0;color:#3a2c24}
+  .menu-nav a:active{opacity:.55}
+  .menu-foot{width:100%;max-width:400px;margin:26px auto 0;padding-top:22px;border-top:1px solid rgba(60,40,28,.13);
+    font-size:12px;color:#8a7666;font-family:-apple-system,sans-serif}
+
   /* site footer */
   .sitefooter{height:100dvh;background:#f5f0e7;color:#2f2119;
     padding:64px 30px calc(34px + env(safe-area-inset-bottom));display:flex;flex-direction:column;overflow:hidden;
@@ -62,6 +87,40 @@
 </style>
 </head>
 <body>
+<button class="hamb" id="hambBtn" aria-label="Menu"><span></span><span></span><span></span></button>
+<div class="menu-wrap" id="menuWrap">
+  <div class="menu-panel">
+    <button class="menu-close" id="menuClose" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    <nav class="menu-nav">
+      <a class="m-item" href="#" data-home>Home</a>
+      <a class="m-item" href="https://soltalingerie.com/collections/sale">Sale</a>
+      <a class="m-item" href="https://soltalingerie.com/collections/new-arrivals">New Arrivals</a>
+
+      <div class="m-group"><div class="m-label">Lingerie Sets</div>
+        <a href="https://soltalingerie.com/collections/the-bold-seductive">The Bold &amp; Seductive</a>
+        <a href="https://soltalingerie.com/collections/the-classic-and-elegant">The Classic and Elegant</a>
+        <a href="https://soltalingerie.com/collections/the-playful-flirty">The Playful &amp; Flirty</a>
+        <a href="https://soltalingerie.com/collections/all-sets">All Sets</a>
+      </div>
+      <div class="m-group"><div class="m-label">Nightwear</div>
+        <a href="https://soltalingerie.com/collections/babydolls">Babydolls</a>
+        <a href="https://soltalingerie.com/collections/women-s-nightgowns-solta-lingerie">Nightgowns</a>
+        <a href="https://soltalingerie.com/collections/robes">Robes</a>
+      </div>
+      <div class="m-group"><div class="m-label">Lingerie</div>
+        <a href="https://soltalingerie.com/collections/bras">Bras</a>
+        <a href="https://soltalingerie.com/collections/knickers">Knickers</a>
+        <a href="https://soltalingerie.com/collections/all-pieces">All Pieces</a>
+      </div>
+
+      <a class="m-item" href="https://soltalingerie.com/blogs/solta-tips-and-secrets">Solta Tips and Secrets</a>
+      <a class="m-item" href="https://soltalingerie.com/pages/our-story">Our Story</a>
+      <a class="m-item" href="https://affiliate.soltalingerie.com">Affiliate Program</a>
+    </nav>
+    <div class="menu-foot">love@soltalingerie.com</div>
+  </div>
+</div>
+
 <div class="app" id="app"></div>
 
 <script>
@@ -160,9 +219,13 @@ const pages=[...deck.children];
 const N=pages.length;
 let v=0;                                   // current vertical page
 
+const hambBtn=document.getElementById('hambBtn');
 const pageH=()=>app.clientHeight;
 const yFor=i=>-i*pageH();
-function renderDeck(anim){ deck.style.transition=anim?'':'none'; deck.style.transform=`translateY(${yFor(v)}px)`; }
+function renderDeck(anim){ deck.style.transition=anim?'':'none'; deck.style.transform=`translateY(${yFor(v)}px)`;
+  const bg=getComputedStyle(pages[v]).backgroundColor; const m=bg&&bg.match(/\d+/g);
+  if(m) hambBtn.classList.toggle('dark',(+m[0]*.299 + +m[1]*.587 + +m[2]*.114)>150);
+}
 
 /* nested horizontal carousel (single instance) */
 const car=deck.querySelector('.carousel');
@@ -213,6 +276,12 @@ app.addEventListener('wheel',e=>{ e.preventDefault(); if(wl||Math.abs(e.deltaY)<
   if(e.deltaY>0)v=Math.min(N-1,v+1); else v=Math.max(0,v-1); renderDeck(true); setTimeout(()=>wl=false,640); },{passive:false});
 // swallow the click that ends a swipe (so a drag doesn't open a link)
 app.addEventListener('click',e=>{ if(Math.abs(mdx)>8||Math.abs(mdy)>8){ e.preventDefault(); e.stopPropagation(); } }, true);
+
+// hamburger menu (items link to the real Solta store)
+const menuWrap=document.getElementById('menuWrap');
+hambBtn.addEventListener('click',()=>menuWrap.classList.add('open'));
+document.getElementById('menuClose').addEventListener('click',()=>menuWrap.classList.remove('open'));
+document.querySelector('[data-home]').addEventListener('click',e=>{ e.preventDefault(); menuWrap.classList.remove('open'); v=0; renderDeck(true); });
 </script>
 </body>
 </html>
