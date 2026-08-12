@@ -4,6 +4,9 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no" />
 <title>Solta · Brazilian Lingerie</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;1,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   html,body{background:#0d0a08}
@@ -61,6 +64,39 @@
     display:flex;align-items:center;justify-content:center;box-shadow:0 6px 20px rgba(0,0,0,.3);text-decoration:none}
   .wa svg{width:30px;height:30px;fill:#fff}
   .wa:active{transform:scale(.94)}
+
+  /* ===================== DESKTOP ===================== */
+  .desktop{display:none}
+  @media(min-width:900px){
+    .app{display:none}
+    .desktop{display:block;background:#f5fafd}
+    /* chrome dark on the light desktop */
+    .hamb span{background:#37424d !important;box-shadow:none}
+    .cart{color:#37424d !important}
+    .cart svg{filter:none}
+
+    .dhero{position:relative;min-height:100vh;background:#f5fafd;overflow:hidden}
+    .dhero .dph{position:absolute;inset:0;background:url('img/desktop-hero.jpg') no-repeat right center;background-size:contain}
+    .dhero .dtxt{position:relative;z-index:2;width:44%;min-height:100vh;display:flex;flex-direction:column;
+      justify-content:center;padding:0 0 0 7vw}
+    .dhero .dlogo{height:38px;width:auto;margin-bottom:34px;opacity:.95}
+    .dhero .deyebrow{font-family:'Inter',sans-serif;font-size:13px;letter-spacing:.34em;text-transform:uppercase;
+      color:#9a6b58;font-weight:600;margin-bottom:20px}
+    .dhero .dtitle{font-family:'Playfair Display',Georgia,serif;font-weight:600;color:#37424d;
+      font-size:clamp(52px,5.4vw,84px);line-height:1.03;letter-spacing:.005em}
+    .dhero .dtitle .it{font-style:italic;font-weight:500}
+    .dhero .drule{width:56px;height:1px;background:#c9a99a;margin:30px 0}
+    .dhero .dshop{display:inline-flex;align-items:center;gap:14px;text-decoration:none;font-family:'Inter',sans-serif;
+      font-size:13px;letter-spacing:.26em;text-transform:uppercase;color:#37424d;font-weight:600;
+      border-bottom:1px solid #c9a99a;padding-bottom:8px;width:max-content;transition:gap .25s}
+    .dhero .dshop:hover{gap:22px}
+    .dhero .dshop span{font-size:17px}
+
+    /* desktop footer */
+    .desktop .sitefooter{height:auto;min-height:0;overflow:visible;padding:66px 8vw 52px;align-items:center}
+    .desktop .sitefooter .fcols{grid-template-columns:repeat(4,1fr);max-width:1100px;width:100%;gap:30px}
+    .desktop .sitefooter .fabout,.desktop .sitefooter .fcontact,.desktop .sitefooter .fbar{max-width:1100px;width:100%}
+  }
   .menu-wrap{position:fixed;inset:0;z-index:60;visibility:hidden;opacity:0;transition:opacity .3s,visibility .3s}
   .menu-wrap.open{visibility:visible;opacity:1}
   .menu-panel{position:absolute;inset:0;background:#f5f0e7;overflow-y:auto;-webkit-overflow-scrolling:touch;
@@ -138,6 +174,19 @@
 <a class="wa" href="https://wa.me/447715140279?text=Hi%20Solta%2C%20I%20have%20a%20question" target="_blank" rel="noopener" aria-label="WhatsApp support"><svg viewBox="0 0 32 32"><path d="M16 3C9.4 3 4 8.4 4 15c0 2.1.6 4.2 1.7 6L4 29l8.3-1.6c1.7.9 3.6 1.4 5.5 1.4h.1c6.6 0 12-5.4 12-12S22.6 3 16 3zm0 21.9h-.1c-1.7 0-3.4-.5-4.9-1.3l-.4-.2-4.9 1 1-4.7-.3-.4c-1-1.5-1.5-3.3-1.5-5.2 0-5.4 4.5-9.9 10-9.9s9.9 4.5 9.9 10-4.4 9.9-9.8 9.9zm5.5-7.4c-.3-.2-1.8-.9-2-1-.3-.1-.5-.2-.7.2s-.8 1-1 1.2c-.2.2-.4.2-.7.1-.3-.2-1.3-.5-2.4-1.5-.9-.8-1.5-1.8-1.7-2.1-.2-.3 0-.5.1-.6.1-.1.3-.4.5-.6.1-.2.2-.3.3-.5.1-.2 0-.4 0-.6s-.7-1.7-1-2.3c-.3-.6-.5-.5-.7-.5h-.6c-.2 0-.5.1-.8.4-.3.3-1 1-1 2.4s1.1 2.8 1.2 3c.2.2 2.1 3.2 5.1 4.5.7.3 1.3.5 1.7.6.7.2 1.4.2 1.9.1.6-.1 1.8-.7 2-1.4.3-.7.3-1.3.2-1.4-.1-.2-.3-.2-.6-.4z"/></svg></a>
 
 <div class="app" id="app"></div>
+
+<div class="desktop" id="desktop">
+  <section class="dhero">
+    <div class="dph"></div>
+    <div class="dtxt">
+      <img class="dlogo" src="img/solta-word.png" alt="Solta">
+      <div class="deyebrow">Summer Sales</div>
+      <h1 class="dtitle">Brazilian<br><span class="it">by nature.</span></h1>
+      <div class="drule"></div>
+      <a class="dshop" href="https://soltalingerie.com/collections/sale">Shop <span>&rarr;</span></a>
+    </div>
+  </section>
+</div>
 
 <script>
 const SHOP='https://soltalingerie.com/collections/';
@@ -229,6 +278,7 @@ const FOOTER_HTML = `
 /* ===== assemble the deck + unified swipe controller ===== */
 const app=document.getElementById('app');
 app.innerHTML = `<div class="deck">${cardsHTML}${FOOTER_HTML}</div>`;
+document.getElementById('desktop').insertAdjacentHTML('beforeend', FOOTER_HTML);
 const deck=app.querySelector('.deck');
 // force muted autoplay/loop on any video (mobile-safe)
 deck.querySelectorAll('video').forEach(v=>{ v.muted=true; v.setAttribute('muted',''); const p=v.play(); if(p&&p.catch)p.catch(()=>{}); });
