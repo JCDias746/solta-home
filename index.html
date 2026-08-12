@@ -8,11 +8,10 @@
   *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   html,body{background:#0d0a08}
   body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
-  .app{max-width:460px;margin:0 auto;height:100dvh;overflow-y:scroll;background:#0d0a08;
-    scroll-snap-type:y proximity;-webkit-overflow-scrolling:touch;scrollbar-width:none;box-shadow:0 0 60px rgba(0,0,0,.35)}
-  .app::-webkit-scrollbar{display:none}
-  .card{min-height:100dvh;display:flex;align-items:center;justify-content:center;position:relative;
-    scroll-snap-align:start;overflow:hidden}
+  .app{max-width:460px;margin:0 auto;height:100dvh;overflow:hidden;background:#0d0a08;
+    position:relative;touch-action:none;box-shadow:0 0 60px rgba(0,0,0,.35)}
+  .deck{will-change:transform;transition:transform .55s cubic-bezier(.22,1,.36,1)}
+  .card{height:100dvh;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
   .wrap{position:relative;width:100%;display:block}
   .wrap img{width:100%;height:auto;display:block}
   .area{position:absolute;display:block}
@@ -24,7 +23,7 @@
   .card.compact{min-height:auto;padding:9vh 0;flex-direction:column}
   .carwrap{width:100%}
   .carousel{position:relative;width:100%;overflow:hidden}
-  .track{display:flex;align-items:center;gap:14px;will-change:transform;touch-action:pan-y;
+  .track{display:flex;align-items:center;gap:14px;will-change:transform;touch-action:none;
     transition:transform .52s cubic-bezier(.22,1,.36,1)}
   .track.dragging{transition:none}
   .slide{flex:0 0 84%;display:block;border-radius:16px;overflow:hidden;
@@ -37,8 +36,8 @@
   .dot.on{background:#fff;width:22px;border-radius:4px}
 
   /* site footer */
-  .sitefooter{scroll-snap-align:start;min-height:100dvh;background:#f5f0e7;color:#2f2119;
-    padding:74px 30px calc(40px + env(safe-area-inset-bottom));display:flex;flex-direction:column;
+  .sitefooter{height:100dvh;background:#f5f0e7;color:#2f2119;
+    padding:64px 30px calc(34px + env(safe-area-inset-bottom));display:flex;flex-direction:column;overflow:hidden;
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
   .sitefooter .flogo{height:26px;opacity:.95}
   .sitefooter .fabout{margin-top:18px;max-width:300px;font-size:14px;line-height:1.6;color:#7a6a5d;font-weight:300}
@@ -90,7 +89,7 @@ const cards = [
   ]},
 ];
 
-document.getElementById('app').innerHTML = cards.map((c,i)=>{
+const cardsHTML = cards.map((c,i)=>{
   const lazy = i>0 ? 'loading="lazy"' : '';
   if(c.carousel){
     const slides = c.carousel.map((s,k)=>`<a class="slide${k===0?' active':''}" href="${s.href}" aria-label="Shop"><img src="${s.img}" ${lazy} alt="Solta"></a>`).join('');
@@ -105,9 +104,9 @@ document.getElementById('app').innerHTML = cards.map((c,i)=>{
   return `<div class="card" style="background:${c.bg}">${inner}</div>`;
 }).join('');
 
-// complete footer
+// footer markup (added to the deck below)
 const S='https://soltalingerie.com';
-document.getElementById('app').insertAdjacentHTML('beforeend', `
+const FOOTER_HTML = `
   <footer class="sitefooter">
     <p class="fabout">Brazilian lingerie, designed and made in Brazil. Delivered across the UK.</p>
     <div class="fcols">
@@ -137,67 +136,69 @@ document.getElementById('app').insertAdjacentHTML('beforeend', `
     </div>
     <div class="fbar">© 2025 Solta Lingerie · Made in Brazil</div>
   </footer>
-`);
+`;
 
-// JS carousel: swipe advances exactly one card and eases perfectly into place (touch + mouse)
-document.querySelectorAll('.carousel').forEach(car=>{
-  const track=car.querySelector('.track');
-  const slides=[...track.children];
-  const n=slides.length;
-  const dots=[...car.parentElement.querySelectorAll('.dot')];
-  const GAP=14;
-  let index=0, startX=0, startY=0, dragging=false, decided=false, horizontal=false, baseX=0, moved=0;
+/* ===== assemble the deck + unified swipe controller ===== */
+const app=document.getElementById('app');
+app.innerHTML = `<div class="deck">${cardsHTML}${FOOTER_HTML}</div>`;
+const deck=app.querySelector('.deck');
+const pages=[...deck.children];
+const N=pages.length;
+let v=0;                                   // current vertical page
 
-  const slideW=()=>slides[0].getBoundingClientRect().width;
-  const step=()=>slideW()+GAP;
-  const centerOffset=()=>(car.clientWidth - slideW())/2;
-  const xFor=i=>centerOffset() - i*step();
+const pageH=()=>app.clientHeight;
+const yFor=i=>-i*pageH();
+function renderDeck(anim){ deck.style.transition=anim?'':'none'; deck.style.transform=`translateY(${yFor(v)}px)`; }
 
-  function render(anim){
-    track.style.transition = anim ? '' : 'none';
-    track.style.transform = `translateX(${xFor(index)}px)`;
-    slides.forEach((s,i)=>s.classList.toggle('active', i===index));
-    dots.forEach((d,i)=>d.classList.toggle('on', i===index));
-  }
-  requestAnimationFrame(()=>render(false));
-  addEventListener('resize', ()=>render(false));
+/* nested horizontal carousel (single instance) */
+const car=deck.querySelector('.carousel');
+let cTrack,cSlides,cDots,cN=0,h=0,cXfor=i=>0,renderCar=()=>{};
+if(car){
+  cTrack=car.querySelector('.track');
+  cSlides=[...cTrack.children]; cN=cSlides.length;
+  cDots=[...car.parentElement.querySelectorAll('.dot')];
+  const GAP=14, sw=()=>cSlides[0].getBoundingClientRect().width;
+  const cstep=()=>sw()+GAP, coff=()=>(car.clientWidth-sw())/2;
+  cXfor=i=>coff()-i*cstep();
+  renderCar=anim=>{ cTrack.style.transition=anim?'':'none'; cTrack.style.transform=`translateX(${cXfor(h)}px)`;
+    cSlides.forEach((s,i)=>s.classList.toggle('active',i===h)); cDots.forEach((d,i)=>d.classList.toggle('on',i===h)); };
+}
+function renderAll(anim){ renderDeck(anim); renderCar(anim); }
+requestAnimationFrame(()=>renderAll(false));
+addEventListener('resize',()=>renderAll(false));
 
-  function onStart(x,y){ dragging=true; decided=false; horizontal=false; moved=0;
-    startX=x; startY=y; baseX=xFor(index); track.classList.add('dragging'); }
-  function onMove(x,y,ev){
-    if(!dragging) return;
-    const mx=x-startX, my=y-startY;
-    if(!decided && (Math.abs(mx)>7 || Math.abs(my)>7)){ decided=true; horizontal=Math.abs(mx)>Math.abs(my); }
-    if(horizontal){
-      if(ev && ev.cancelable) ev.preventDefault();
-      moved=mx;
-      let px=baseX+mx; const maxX=xFor(0), minX=xFor(n-1);
-      if(px>maxX) px=maxX+(px-maxX)*0.35;
-      if(px<minX) px=minX+(px-minX)*0.35;
-      track.style.transform=`translateX(${px}px)`;
-    }
-  }
-  function onEnd(){
-    if(!dragging) return; dragging=false; track.classList.remove('dragging');
-    if(horizontal){
-      const th=car.clientWidth*0.12;
-      if(moved<=-th) index=Math.min(n-1,index+1);
-      else if(moved>=th) index=Math.max(0,index-1);
-      render(true);
-    }
-  }
-  // touch (mobile)
-  track.addEventListener('touchstart', e=>onStart(e.touches[0].clientX,e.touches[0].clientY), {passive:true});
-  track.addEventListener('touchmove',  e=>onMove(e.touches[0].clientX,e.touches[0].clientY,e), {passive:false});
-  track.addEventListener('touchend',   onEnd);
-  track.addEventListener('touchcancel',onEnd);
-  // mouse (desktop)
-  track.addEventListener('mousedown', e=>{ e.preventDefault(); onStart(e.clientX,e.clientY); });
-  window.addEventListener('mousemove', e=>onMove(e.clientX,e.clientY,e));
-  window.addEventListener('mouseup', onEnd);
-  // block navigation if the gesture was a swipe
-  slides.forEach(s=>s.addEventListener('click', e=>{ if(Math.abs(moved)>8) e.preventDefault(); }));
-});
+/* one gesture handler: vertical swipe = page, horizontal swipe (in carousel) = slide */
+let sx=0,sy=0,axis=null,down=false,inCar=false,bY=0,bX=0,mdx=0,mdy=0;
+function gStart(x,y,target){ down=true; axis=null; sx=x; sy=y; mdx=0; mdy=0;
+  bY=yFor(v); inCar = !!(car && target.closest && target.closest('.carousel')===car);
+  bX = inCar ? cXfor(h) : 0;
+  deck.style.transition='none'; if(inCar) cTrack.style.transition='none';
+}
+function gMove(x,y,ev){ if(!down) return; mdx=x-sx; mdy=y-sy;
+  if(!axis && (Math.abs(mdx)>8||Math.abs(mdy)>8)) axis = Math.abs(mdx)>Math.abs(mdy) ? 'h' : 'v';
+  if(!axis) return;
+  if(ev&&ev.cancelable) ev.preventDefault();
+  if(axis==='v'){ let py=bY+mdy; const top=yFor(0),bot=yFor(N-1);
+    if(py>top)py=top+(py-top)*0.3; if(py<bot)py=bot+(py-bot)*0.3; deck.style.transform=`translateY(${py}px)`; }
+  else if(axis==='h' && inCar){ let px=bX+mdx; const l=cXfor(0),r=cXfor(cN-1);
+    if(px>l)px=l+(px-l)*0.35; if(px<r)px=r+(px-r)*0.35; cTrack.style.transform=`translateX(${px}px)`; }
+}
+function gEnd(){ if(!down) return; down=false;
+  if(axis==='v'){ const th=pageH()*0.12; if(mdy<=-th)v=Math.min(N-1,v+1); else if(mdy>=th)v=Math.max(0,v-1); renderDeck(true); }
+  else if(axis==='h' && inCar){ const th=car.clientWidth*0.12; if(mdx<=-th)h=Math.min(cN-1,h+1); else if(mdx>=th)h=Math.max(0,h-1); renderCar(true); }
+}
+app.addEventListener('touchstart',e=>gStart(e.touches[0].clientX,e.touches[0].clientY,e.target),{passive:true});
+app.addEventListener('touchmove', e=>gMove(e.touches[0].clientX,e.touches[0].clientY,e),{passive:false});
+app.addEventListener('touchend', gEnd);
+app.addEventListener('touchcancel', gEnd);
+app.addEventListener('mousedown', e=>gStart(e.clientX,e.clientY,e.target));
+window.addEventListener('mousemove', e=>gMove(e.clientX,e.clientY,e));
+window.addEventListener('mouseup', gEnd);
+let wl=false;
+app.addEventListener('wheel',e=>{ e.preventDefault(); if(wl||Math.abs(e.deltaY)<16)return; wl=true;
+  if(e.deltaY>0)v=Math.min(N-1,v+1); else v=Math.max(0,v-1); renderDeck(true); setTimeout(()=>wl=false,640); },{passive:false});
+// swallow the click that ends a swipe (so a drag doesn't open a link)
+app.addEventListener('click',e=>{ if(Math.abs(mdx)>8||Math.abs(mdy)>8){ e.preventDefault(); e.stopPropagation(); } }, true);
 </script>
 </body>
 </html>
