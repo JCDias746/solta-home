@@ -12,8 +12,9 @@
     position:relative;touch-action:none;box-shadow:0 0 60px rgba(0,0,0,.35)}
   .deck{will-change:transform;transition:transform .55s cubic-bezier(.22,1,.36,1)}
   .card{height:100dvh;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
-  .vidwrap{position:relative;width:100%;height:100dvh;overflow:hidden}
-  .vidwrap video{width:100%;height:100%;object-fit:cover;display:block}
+  .vidwrap{position:relative;display:block;width:100%;height:100dvh;overflow:hidden}
+  .vidwrap video{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none}
+  .vidwrap .vscrim,.vidwrap .vlogo{pointer-events:none}
   .vidwrap .vscrim{position:absolute;left:0;right:0;top:0;height:24%;pointer-events:none;
     background:linear-gradient(180deg,rgba(18,11,7,.5),transparent)}
   .vidwrap .vlogo{position:absolute;top:38px;left:50%;transform:translateX(-50%);height:26px;
@@ -78,7 +79,7 @@ const cards = [
       { href:SHOP+'babydolls', style:'top:58%;left:50%;width:50%;height:40%' },  // Nightwear (bottom-right)
   ]},
 
-  { video:'vid/brazil.mp4', bg:'#0d0a08' },
+  { video:'vid/brazil.mp4', bg:'#0d0a08', href:'https://soltalingerie.com/collections/all-sets' },
 
   { bg:'#0d0a08', carousel:[
       { img:'img/carousel-jasmine.png', href:'https://soltalingerie.com/products/the-solta-whisper-set-jasmite' },
@@ -100,9 +101,9 @@ const cards = [
 const cardsHTML = cards.map((c,i)=>{
   const lazy = i>0 ? 'loading="lazy"' : '';
   if(c.video){
-    return `<div class="card" style="background:${c.bg}"><div class="vidwrap">`
+    return `<div class="card" style="background:${c.bg}"><a class="vidwrap" href="${c.href}" aria-label="Shop">`
       + `<video src="${c.video}" autoplay loop muted playsinline preload="auto"></video>`
-      + `<div class="vscrim"></div><img class="vlogo" src="img/solta-word.png" alt="Solta"></div></div>`;
+      + `<div class="vscrim"></div><img class="vlogo" src="img/solta-word.png" alt="Solta"></a></div>`;
   }
   if(c.carousel){
     const slides = c.carousel.map((s,k)=>`<a class="slide${k===0?' active':''}" href="${s.href}" aria-label="Shop"><img src="${s.img}" ${lazy} alt="Solta"></a>`).join('');
