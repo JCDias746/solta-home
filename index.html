@@ -254,11 +254,12 @@ if(car){
   cTrack=car.querySelector('.track');
   cSlides=[...cTrack.children]; cN=cSlides.length;
   cDots=[...car.parentElement.querySelectorAll('.dot')];
-  const GAP=14, sw=()=>cSlides[0].getBoundingClientRect().width;
-  const cstep=()=>sw()+GAP, coff=()=>(car.clientWidth-sw())/2;
-  cXfor=i=>coff()-i*cstep();
+  // center each slide by its real position (works with mixed image widths)
+  cXfor=i=>{ const s=cSlides[i]; return car.clientWidth/2 - (s.offsetLeft + s.offsetWidth/2); };
   renderCar=anim=>{ cTrack.style.transition=anim?'':'none'; cTrack.style.transform=`translateX(${cXfor(h)}px)`;
     cSlides.forEach((s,i)=>s.classList.toggle('active',i===h)); cDots.forEach((d,i)=>d.classList.toggle('on',i===h)); };
+  // recenter once each image knows its real width
+  cTrack.querySelectorAll('img').forEach(im=>{ if(!im.complete) im.addEventListener('load',()=>renderCar(false),{once:true}); });
 }
 function renderAll(anim){ renderDeck(anim); renderCar(anim); }
 requestAnimationFrame(()=>renderAll(false));
